@@ -12,32 +12,90 @@ function App() {
   const [analytics, setAnalytics] = useState(null);
   const [darkMode, setDarkMode] = useState(false);
   const [activeTab, setActiveTab] = useState('single');
+  const [connectionStatus, setConnectionStatus] = useState('checking');
   
   // API base URL - update this to your Render URL
-  const API_BASE = 'https://spamdetectionapp-2.onrender.com';
+  const API_BASE = 'https://spamdetectionapp-1.onrender.com';
 
   useEffect(() => {
-    fetchHistory();
-    fetchAnalytics();
+    checkServerConnection();
   }, []);
+
+  const checkServerConnection = async () => {
+    try {
+      setConnectionStatus('checking');
+      const response = await fetch(`${API_BASE}/`, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+        },
+      });
+      
+      if (response.ok) {
+        setConnectionStatus('connected');
+        fetchHistory();
+        fetchAnalytics();
+      } else if (response.status === 404) {
+        setConnectionStatus('disconnected');
+        setError('🚨 Server deployment issue detected! The Render service appears to be down or not deployed. This usually happens when: 1) The service hasn\'t been deployed yet, 2) There was a deployment failure, or 3) The service is sleeping and needs to be awakened. Please contact the administrator or try again in a few minutes.');
+      } else {
+        setConnectionStatus('disconnected');
+        setError(`Server responded with error ${response.status}. Please try again in a few moments.`);
+      }
+    } catch (err) {
+      setConnectionStatus('disconnected');
+      if (err.name === 'TypeError' || err.message.includes('Failed to fetch')) {
+        setError('🌐 Network connection failed. The server may be starting up (this can take 30-60 seconds on Render) or there may be a connectivity issue. Please check your internet connection and try again.');
+      } else {
+        setError('Cannot connect to server. Please try again later.');
+      }
+      console.error('Connection error:', err);
+    }
+  };
 
   const fetchHistory = async () => {
     try {
-      const response = await fetch(`${API_BASE}/history?limit=10`);
+      const response = await fetch(`${API_BASE}/history?limit=10`, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+        },
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      
       const data = await response.json();
       setHistory(data.history || []);
     } catch (err) {
       console.error('Failed to fetch history:', err);
+      if (connectionStatus === 'connected') {
+        setError('Failed to load history data.');
+      }
     }
   };
 
   const fetchAnalytics = async () => {
     try {
-      const response = await fetch(`${API_BASE}/analytics`);
+      const response = await fetch(`${API_BASE}/analytics`, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+        },
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      
       const data = await response.json();
       setAnalytics(data);
     } catch (err) {
       console.error('Failed to fetch analytics:', err);
+      if (connectionStatus === 'connected') {
+        setError('Failed to load analytics data.');
+      }
     }
   };
 
@@ -46,6 +104,11 @@ function App() {
     
     if (!message.trim()) {
       setError('Please enter a message to check');
+      return;
+    }
+
+    if (connectionStatus !== 'connected') {
+      setError('Not connected to server. Please wait for connection or refresh the page.');
       return;
     }
 
@@ -58,12 +121,14 @@ function App() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Accept': 'application/json',
         },
         body: JSON.stringify({ text: message }),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to get prediction');
+        const errorText = await response.text();
+        throw new Error(`HTTP ${response.status}: ${errorText || response.statusText}`);
       }
 
       const data = await response.json();
@@ -71,7 +136,8 @@ function App() {
       fetchHistory();
       fetchAnalytics();
     } catch (err) {
-      setError('Error: Could not connect to the spam detection API. Make sure your API server is running.');
+      console.error('Prediction error:', err);
+      setError(`Error: ${err.message}. Please check your connection and try again.`);
     } finally {
       setLoading(false);
     }
@@ -188,6 +254,24 @@ function App() {
         <header className="header">
           <h1>AI Spam Detection</h1>
           <p>AI-powered message analysis with advanced features</p>
+          {connectionStatus === 'checking' && (
+            <div className="connection-status checking">
+              <span>🔄</span> Connecting to server... <small>(API: {API_BASE})</small>
+            </div>
+          )}
+          {connectionStatus === 'disconnected' && (
+            <div className="connection-status disconnected">
+              <span>⚠️</span> Server disconnected <small>(API: {API_BASE})</small>
+              <button onClick={checkServerConnection} className="retry-btn">
+                🔄 Retry Connection
+              </button>
+            </div>
+          )}
+          {connectionStatus === 'connected' && (
+            <div className="connection-status connected">
+              <span>✅</span> Connected to server <small>(API: {API_BASE})</small>
+            </div>
+          )}
         </header>
 
         <div className="tabs">
@@ -324,6 +408,38 @@ function App() {
 
         {activeTab === 'analytics' && (
           <div className="tab-content">
+            {connectionStatus === 'disconnected' && (
+              <div className="deployment-status">
+                <h3>🚨 Deployment Status</h3>
+                <div className="status-card error">
+                  <h4>Server Connection Failed</h4>
+                  <p><strong>API Endpoint:</strong> {API_BASE}</p>
+                  <p><strong>Issue:</strong> The Render deployment appears to be down or not responding.</p>
+                  
+                  <h5>Possible Causes:</h5>
+                  <ul>
+                    <li>🛌 <strong>Service Sleeping:</strong> Render free tier services sleep after 15 minutes of inactivity</li>
+                    <li>⚠️ <strong>Deployment Failed:</strong> Recent code changes may have caused deployment issues</li>
+                    <li>🔧 <strong>Service Not Deployed:</strong> The service may need to be manually deployed</li>
+                    <li>📦 <strong>Dependency Issues:</strong> Missing packages or environment problems</li>
+                  </ul>
+                  
+                  <h5>Troubleshooting Steps:</h5>
+                  <ol>
+                    <li>Wait 60-90 seconds for the service to wake up, then click "Retry Connection"</li>
+                    <li>Check the Render dashboard for deployment logs and errors</li>
+                    <li>Verify all dependencies are listed in requirements.txt</li>
+                    <li>Ensure the start command is correctly configured</li>
+                    <li>Check for any recent code changes that might have broken the deployment</li>
+                  </ol>
+                  
+                  <button onClick={checkServerConnection} className="retry-btn large">
+                    🔄 Retry Connection
+                  </button>
+                </div>
+              </div>
+            )}
+            
             {analytics && analytics.total_predictions > 0 ? (
               <div className="analytics">
                 <h3>Analytics Dashboard</h3>
