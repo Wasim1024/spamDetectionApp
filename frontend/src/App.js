@@ -14,6 +14,7 @@ function App() {
   const [activeTab, setActiveTab] = useState('single');
   
   // API base URL - update this to your Render URL
+  const API_BASE = 'http://localhost:8003';
 
   useEffect(() => {
     fetchHistory();
@@ -185,14 +186,8 @@ function App() {
     <div className={`App ${darkMode ? 'dark-mode' : ''}`}>
       <div className="container">
         <header className="header">
-          <h1>🛡️ Enhanced Spam Detection</h1>
+          <h1>🛡️ AI Spam Detection</h1>
           <p>AI-powered message analysis with advanced features</p>
-          <button 
-            className="theme-toggle"
-            onClick={() => setDarkMode(!darkMode)}
-          >
-            {darkMode ? '☀️' : '🌙'}
-          </button>
         </header>
 
         <div className="tabs">
