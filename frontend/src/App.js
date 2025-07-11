@@ -186,7 +186,7 @@ function App() {
     <div className={`App ${darkMode ? 'dark-mode' : ''}`}>
       <div className="container">
         <header className="header">
-          <h1>🛡️ AI Spam Detection</h1>
+          <h1>➕ AI Spam Detection</h1>
           <p>AI-powered message analysis with advanced features</p>
         </header>
 
