@@ -19,6 +19,7 @@ The frontend displays whether the message is spam or legitimate.
 
 Install dependencies:
 pip install fastapi uvicorn scikit-learn joblib
+
 Run the server:
 uvicorn main:app --reload --port 8001
 ## Frontend
@@ -26,6 +27,7 @@ uvicorn main:app --reload --port 8001
 Navigate to the frontend folder.
 Install dependencies:
 npm install
+
 Start the React app:
 npm start
 Open http://localhost:3000 in your browser.
