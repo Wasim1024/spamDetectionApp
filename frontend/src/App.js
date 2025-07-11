@@ -14,7 +14,7 @@ function App() {
   const [activeTab, setActiveTab] = useState('single');
   
   // API base URL - update this to your Render URL
-  const API_BASE = 'http://localhost:8003';
+  const API_BASE = 'https://spamdetectionapp-2.onrender.com';
 
   useEffect(() => {
     fetchHistory();
