@@ -54,53 +54,6 @@ A full-stack spam detection application using FastAPI (Python) for the backend a
    ```
 4. Open `http://localhost:3000` in your browser
 
-## Deployment on Render
-
-### Prerequisites
-- GitHub account
-- Render account (free tier available)
-
-### Steps
-
-1. **Push to GitHub**:
-   ```bash
-   git init
-   git add .
-   git commit -m "Initial commit"
-   git branch -M main
-   git remote add origin https://github.com/yourusername/spamDetectionApp.git
-   git push -u origin main
-   ```
-
-2. **Deploy on Render**:
-   - Go to [Render Dashboard](https://dashboard.render.com/)
-   - Click "New +" → "Web Service"
-   - Connect your GitHub repository
-   - Configure the service:
-     - **Name**: spam-detection-api
-     - **Environment**: Python 3
-     - **Build Command**: `pip install -r requirements.txt`
-     - **Start Command**: `./start.sh`
-   - Click "Create Web Service"
-
-3. **Your API will be available at**: `https://your-service-name.onrender.com`
-
-### Testing the Deployed API
-
-```bash
-# Health check
-curl https://your-service-name.onrender.com/health
-
-# Spam prediction
-curl -X POST "https://your-service-name.onrender.com/predict" \
-     -H "Content-Type: application/json" \
-     -d '{"text": "Congratulations! You have won $1000. Click here to claim your prize!"}'
-```
-
-## Frontend Deployment
-
-The React frontend can be deployed separately on Render or other platforms like Netlify/Vercel.
-
 ## Model Information
 
 - **Vectorizer**: Count Vectorizer for text feature extraction
