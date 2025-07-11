@@ -21,8 +21,23 @@ app.add_middleware(
 
 # Load your vectorizer and model
 try:
-    vectorizer = joblib.load("count_vectorizer.pkl")
-    model = joblib.load("logistic_regression_model.pkl")
+    # Import the model initializer
+    from initialize_models import initialize_models
+    
+    print("Initializing models...")
+    vectorizer, model = initialize_models()
+    print("Models initialized successfully!")
+    
+except Exception as e:
+    print(f"Failed to initialize models: {e}")
+    # Fallback: try to load existing models
+    try:
+        vectorizer = joblib.load("count_vectorizer.pkl")
+        model = joblib.load("logistic_regression_model.pkl")
+        print("Fallback: Loaded existing models")
+    except Exception as fallback_error:
+        print(f"CRITICAL: Could not load any models: {fallback_error}")
+        raise Exception("No models available")
     print("Models loaded successfully")
 except Exception as e:
     print(f"Error loading models: {e}")
